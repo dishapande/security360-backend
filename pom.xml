@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="https://maven.apache.org/POM/4.0.0
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
          https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
@@ -16,6 +16,7 @@
     <groupId>com.security360</groupId>
     <artifactId>security360-backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+
     <name>security360-backend</name>
     <description>Security360 Backend</description>
 
@@ -56,13 +57,14 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- JWT -->
+        <!-- JWT API -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
             <version>0.12.6</version>
         </dependency>
 
+        <!-- JWT Implementation -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-impl</artifactId>
@@ -70,6 +72,7 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- JWT Jackson -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
@@ -84,6 +87,12 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- OAuth2 Client -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-client</artifactId>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -91,32 +100,25 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Spring Security Test -->
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
-        
-        <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-oauth2-client</artifactId>
-</dependency>
 
-        <dependency>
-        	<groupId>com.demo</groupId>
-        	<artifactId>RestFUllApiJpa</artifactId>
-        	<version>0.0.1-SNAPSHOT</version>
-        </dependency>
     </dependencies>
 
     <build>
         <plugins>
 
+            <!-- Spring Boot Maven Plugin -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
 
+            <!-- Maven Compiler Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -130,7 +132,6 @@
                             <artifactId>lombok</artifactId>
                         </path>
                     </annotationProcessorPaths>
-
                 </configuration>
             </plugin>
 
