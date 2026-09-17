@@ -110,8 +110,11 @@ public class SecurityConfig {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(
-                List.of("http://localhost:8081"));
+       configuration.setAllowedOrigins(
+        List.of(
+                "http://localhost:8081",
+                "https://aesthetic-empanada-c34837.netlify.app"
+        ));
 
         configuration.setAllowedMethods(
                 List.of(
