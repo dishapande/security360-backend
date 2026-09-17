@@ -3,4 +3,4 @@ target/
 .project
 .settings/
 *.log
-.env
+.envsrc/main/resources/application.properties
