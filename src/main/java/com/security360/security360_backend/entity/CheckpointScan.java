@@ -11,43 +11,25 @@ public class CheckpointScan {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "checkpoint_id", nullable = false)
     private Checkpoint checkpoint;
 
-    @Column(nullable = false)
+    @Column(name = "scan_time", nullable = false)
     private LocalDateTime scanTime;
 
+    @Column(nullable = false)
     private String status;
 
-    public CheckpointScan() {
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public Long getId() {
-        return id;
-    }
+    public Checkpoint getCheckpoint() { return checkpoint; }
+    public void setCheckpoint(Checkpoint checkpoint) { this.checkpoint = checkpoint; }
 
-    public Checkpoint getCheckpoint() {
-        return checkpoint;
-    }
+    public LocalDateTime getScanTime() { return scanTime; }
+    public void setScanTime(LocalDateTime scanTime) { this.scanTime = scanTime; }
 
-    public void setCheckpoint(Checkpoint checkpoint) {
-        this.checkpoint = checkpoint;
-    }
-
-    public LocalDateTime getScanTime() {
-        return scanTime;
-    }
-
-    public void setScanTime(LocalDateTime scanTime) {
-        this.scanTime = scanTime;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 }

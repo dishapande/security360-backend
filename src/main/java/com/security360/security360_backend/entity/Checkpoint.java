@@ -1,6 +1,7 @@
 package com.security360.security360_backend.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "checkpoints")
@@ -10,42 +11,53 @@ public class Checkpoint {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "patrol_route_id", nullable = false)
-    private PatrolRoute patrolRoute;
+    @Column(name = "checkpoint_code", unique = true, nullable = false)
+    private String checkpointCode;
 
     @Column(nullable = false)
-    private String checkpointName;
+    private String name;
 
-    @Column(name = "sequence_number", nullable = false)
-    private Integer sequenceNumber;
+    @Column(nullable = false)
+    private String type; // QR or NFC
 
-    private Double latitude;
+    @Column(nullable = false)
+    private String site;
 
-    private Double longitude;
+    private String location;
 
-    @Column(name = "qr_code_hash", unique = true)
-    private String qrCodeHash;
+    @Column(nullable = false)
+    private String status; // Active / Inactive
 
-    // --- Getters and Setters ---
+    @Column(name = "last_scan_status")
+    private String lastScanStatus; // Pending / Scanned / Missed
+
+    @Column(name = "last_scan")
+    private LocalDateTime lastScan;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public PatrolRoute getPatrolRoute() { return patrolRoute; }
-    public void setPatrolRoute(PatrolRoute patrolRoute) { this.patrolRoute = patrolRoute; }
+    public String getCheckpointCode() { return checkpointCode; }
+    public void setCheckpointCode(String checkpointCode) { this.checkpointCode = checkpointCode; }
 
-    public String getCheckpointName() { return checkpointName; }
-    public void setCheckpointName(String checkpointName) { this.checkpointName = checkpointName; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public Integer getSequenceNumber() { return sequenceNumber; }
-    public void setSequenceNumber(Integer sequenceNumber) { this.sequenceNumber = sequenceNumber; }
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
 
-    public Double getLatitude() { return latitude; }
-    public void setLatitude(Double latitude) { this.latitude = latitude; }
+    public String getSite() { return site; }
+    public void setSite(String site) { this.site = site; }
 
-    public Double getLongitude() { return longitude; }
-    public void setLongitude(Double longitude) { this.longitude = longitude; }
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
 
-    public String getQrCodeHash() { return qrCodeHash; }
-    public void setQrCodeHash(String qrCodeHash) { this.qrCodeHash = qrCodeHash; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public String getLastScanStatus() { return lastScanStatus; }
+    public void setLastScanStatus(String lastScanStatus) { this.lastScanStatus = lastScanStatus; }
+
+    public LocalDateTime getLastScan() { return lastScan; }
+    public void setLastScan(LocalDateTime lastScan) { this.lastScan = lastScan; }
 }

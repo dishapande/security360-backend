@@ -5,9 +5,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CheckpointRepository extends JpaRepository<Checkpoint, Long> {
-    // Fetch all checkpoints for a specific route
-    List<Checkpoint> findByPatrolRouteId(Long patrolRouteId);
+
+    Optional<Checkpoint> findByCheckpointCode(String checkpointCode);
+
+    List<Checkpoint> findByType(String type);
+
+    List<Checkpoint> findByLastScanStatus(String lastScanStatus);
 }

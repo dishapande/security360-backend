@@ -2,8 +2,7 @@ package com.security360.security360_backend.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -27,14 +26,7 @@ public class PatrolRoute {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @OneToMany(
-        mappedBy = "patrolRoute",
-        cascade = CascadeType.ALL,
-        orphanRemoval = true
-    )
-    @JsonIgnoreProperties("patrolRoute")
-    private List<Checkpoint> checkpoints = new ArrayList<>();
-
+   
     // Constructors
     public PatrolRoute() {
     }
@@ -92,11 +84,5 @@ public class PatrolRoute {
         this.createdAt = createdAt;
     }
 
-    public List<Checkpoint> getCheckpoints() {
-        return checkpoints;
-    }
-
-    public void setCheckpoints(List<Checkpoint> checkpoints) {
-        this.checkpoints = checkpoints;
-    }
+    
 }
