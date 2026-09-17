@@ -1,6 +1,5 @@
 package com.security360.security360_backend.service;
 
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +18,8 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
-    public AuthService(UserRepository userRepository,
+    public AuthService(
+            UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService) {
 
@@ -28,64 +28,158 @@ public class AuthService {
         this.jwtService = jwtService;
     }
 
+    // =====================================================
+    // REGISTER
+    // =====================================================
     public AuthResponse register(RegisterRequest request) {
 
-        if (userRepository.existsByEmail(request.getEmail())) {
-            return new AuthResponse(null, "Email already exists");
+        if (request == null) {
+            return new AuthResponse(
+                    null,
+                    "Invalid registration request"
+            );
+        }
+
+        if (request.getFullName() == null ||
+                request.getFullName().trim().isEmpty()) {
+
+            return new AuthResponse(
+                    null,
+                    "Full name is required"
+            );
+        }
+
+        if (request.getEmail() == null ||
+                request.getEmail().trim().isEmpty()) {
+
+            return new AuthResponse(
+                    null,
+                    "Email is required"
+            );
+        }
+
+        if (request.getPassword() == null ||
+                request.getPassword().isEmpty()) {
+
+            return new AuthResponse(
+                    null,
+                    "Password is required"
+            );
+        }
+
+        String fullName = request.getFullName().trim();
+        String email = request.getEmail().trim().toLowerCase();
+
+        // Check existing email
+        if (userRepository.existsByEmail(email)) {
+            return new AuthResponse(
+                    null,
+                    "Email already exists"
+            );
         }
 
         User user = new User();
 
-        user.setFullName(request.getFullName());
-        user.setEmail(request.getEmail());
+        user.setFullName(fullName);
+        user.setEmail(email);
 
-        // Encrypt password
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        // Never store plain-text password
+        user.setPassword(
+                passwordEncoder.encode(request.getPassword())
+        );
 
-        // 🟢 Default role + Handle role from request (if present)
-        Role roleToAssign = Role.GUARD;
-        if (request.getRole() != null && !request.getRole().isEmpty()) {
-            try {
-                roleToAssign = Role.valueOf(request.getRole());
-            } catch (IllegalArgumentException e) {
-                // If invalid role is sent, fallback to Guard
-                roleToAssign = Role.GUARD;
-            }
-        }
-        user.setRole(roleToAssign);
+        /*
+         * IMPORTANT SECURITY RULE:
+         *
+         * Public registration can NEVER choose its role.
+         *
+         * Every newly registered account is GUARD.
+         *
+         * Even if someone sends:
+         * "role": "ADMIN"
+         *
+         * it will be ignored because RegisterRequest
+         * does not contain a role field.
+         */
+        user.setRole(Role.GUARD);
 
+        // Save user
         userRepository.save(user);
 
-        return new AuthResponse(null, "Registration Successful");
+        System.out.println("==================================");
+        System.out.println("USER REGISTERED");
+        System.out.println("Email : " + user.getEmail());
+        System.out.println("Role  : " + user.getRole());
+        System.out.println("==================================");
+
+        return new AuthResponse(
+                null,
+                "Registration Successful"
+        );
     }
-    
+
+    // =====================================================
+    // LOGIN
+    // =====================================================
     public AuthResponse login(LoginRequest request) {
 
-        // 1. Find user by email
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+        if (request == null ||
+                request.getEmail() == null ||
+                request.getPassword() == null) {
 
-        // 2. Debug logs (Optional)
-        System.out.println("==================================");
-        System.out.println("Email            : " + request.getEmail());
-        System.out.println("Request Password : [" + request.getPassword() + "]");
-        System.out.println("Stored Hash      : " + user.getPassword());
-
-        // 3. Match the password
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        boolean matched = encoder.matches(request.getPassword(), user.getPassword());
-
-        System.out.println("Password Matched : " + matched);
-        System.out.println("==================================");
-
-        if (!matched) {
             throw new RuntimeException("Invalid credentials");
         }
 
-        // 4. Generate JWT
-        String token = jwtService.generateToken(user.getEmail());
+        String email = request.getEmail()
+                .trim()
+                .toLowerCase();
 
-        // 5. Return token, email, and role
-        return new AuthResponse(token, user.getEmail(), user.getRole());
+        System.out.println("==================================");
+        System.out.println("LOGIN ATTEMPT");
+        System.out.println("Email : " + email);
+        System.out.println("==================================");
+
+        // Find user
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException("Invalid credentials")
+                );
+
+        // Compare password with encrypted password
+        boolean passwordMatched = passwordEncoder.matches(
+                request.getPassword(),
+                user.getPassword()
+        );
+
+        System.out.println(
+                "Password matched : " + passwordMatched
+        );
+
+        if (!passwordMatched) {
+
+            System.out.println(
+                    "LOGIN FAILED: Invalid credentials"
+            );
+
+            throw new RuntimeException(
+                    "Invalid credentials"
+            );
+        }
+
+        // Generate JWT
+        String token = jwtService.generateToken(
+                user.getEmail()
+        );
+
+        System.out.println("LOGIN SUCCESSFUL");
+        System.out.println("Email : " + user.getEmail());
+        System.out.println("Role  : " + user.getRole());
+        System.out.println("==================================");
+
+        return new AuthResponse(
+                token,
+                user.getEmail(),
+                user.getRole()
+        );
     }
 }

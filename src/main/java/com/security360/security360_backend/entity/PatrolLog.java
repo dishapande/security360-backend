@@ -11,11 +11,11 @@ public class PatrolLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "patrol_session_id", nullable = false)
     private PatrolSession patrolSession;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "checkpoint_id", nullable = false)
     private Checkpoint checkpoint;
 

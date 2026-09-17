@@ -45,7 +45,7 @@ public class Incident {
     private LocalDateTime updatedAt;
 
     // Relationship: One Incident has Many Media files
-    @OneToMany(mappedBy = "incident", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "incident", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<IncidentMedia> mediaFiles;
 
     // Pre-persist hook to set timestamps

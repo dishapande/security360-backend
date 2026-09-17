@@ -5,6 +5,7 @@ import com.security360.security360_backend.entity.Bill;
 import com.security360.security360_backend.entity.Client;
 import com.security360.security360_backend.repository.BillRepository;
 import com.security360.security360_backend.repository.ClientRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -30,65 +32,228 @@ public class BillingController {
     @Autowired
     private ClientRepository clientRepo;
 
-    // 1. GET: Fetch all bills
+    // =========================================================
+    // 1. GET ALL BILLS
+    // =========================================================
+
     @GetMapping
     public ResponseEntity<List<BillDTO>> getAllBills() {
-        List<Bill> bills = billRepo.findAllByOrderByCreatedAtDesc();
-        return ResponseEntity.ok(mapToDTOList(bills));
+
+        List<Bill> bills =
+                billRepo.findAllByOrderByCreatedAtDesc();
+
+        return ResponseEntity.ok(
+                mapToDTOList(bills)
+        );
     }
 
-    // 2. POST: Generate a new bill
-    @PostMapping("/generate")
-    public ResponseEntity<String> generateBill(@RequestBody BillDTO dto) {
-        Client client = clientRepo.findById(dto.getClientId())
-                .orElseThrow(() -> new RuntimeException("Client not found with ID: " + dto.getClientId()));
+    // =========================================================
+    // 2. GENERATE NEW BILL
+    // =========================================================
 
-        // Auto-generate a unique Invoice Number
-        String invoiceNum = "INV-" + YearMonth.now().format(DateTimeFormatter.ofPattern("yyyyMM")) + "-" + (new Random().nextInt(9999) + 1000);
+    @PostMapping("/generate")
+    public ResponseEntity<String> generateBill(
+            @RequestBody BillDTO dto) {
+
+        if (dto == null) {
+            return ResponseEntity.badRequest()
+                    .body("Bill data is required.");
+        }
+
+        if (dto.getClientId() == null) {
+            return ResponseEntity.badRequest()
+                    .body("Client ID is required.");
+        }
+
+        if (dto.getAmount() == null) {
+            return ResponseEntity.badRequest()
+                    .body("Amount is required.");
+        }
+
+        Client client = clientRepo.findById(
+                dto.getClientId()
+        ).orElseThrow(() ->
+                new RuntimeException(
+                        "Client not found with ID: "
+                                + dto.getClientId()
+                )
+        );
+
+        // =====================================================
+        // GENERATE INVOICE NUMBER
+        // =====================================================
+
+        String invoiceNum =
+                "INV-"
+                + YearMonth.now().format(
+                        DateTimeFormatter.ofPattern("yyyyMM")
+                )
+                + "-"
+                + (new Random().nextInt(9000) + 1000);
+
+        // =====================================================
+        // CREATE BILL
+        // =====================================================
 
         Bill bill = new Bill();
+
         bill.setClient(client);
+
         bill.setInvoiceNumber(invoiceNum);
-        bill.setBillingMonth(dto.getBillingMonth());
-        bill.setAmount(dto.getAmount());
-        
-        // Set Tax & Discount (default to 0 if null)
-        bill.setTaxPercent(dto.getTaxPercent() != null ? dto.getTaxPercent() : BigDecimal.ZERO);
-        bill.setDiscountPercent(dto.getDiscountPercent() != null ? dto.getDiscountPercent() : BigDecimal.ZERO);
-        
-        // Calculate Total: (Amount + Tax) - Discount
-        BigDecimal tax = bill.getAmount().multiply(bill.getTaxPercent().divide(BigDecimal.valueOf(100)));
-        BigDecimal discount = bill.getAmount().multiply(bill.getDiscountPercent().divide(BigDecimal.valueOf(100)));
-        BigDecimal total = bill.getAmount().add(tax).subtract(discount);
+
+        bill.setBillingMonth(
+                dto.getBillingMonth()
+        );
+
+        bill.setAmount(
+                dto.getAmount()
+        );
+
+        // =====================================================
+        // TAX
+        // =====================================================
+
+        BigDecimal taxPercent =
+                dto.getTaxPercent() != null
+                        ? dto.getTaxPercent()
+                        : BigDecimal.ZERO;
+
+        bill.setTaxPercent(taxPercent);
+
+        // =====================================================
+        // DISCOUNT
+        // =====================================================
+
+        BigDecimal discountPercent =
+                dto.getDiscountPercent() != null
+                        ? dto.getDiscountPercent()
+                        : BigDecimal.ZERO;
+
+        bill.setDiscountPercent(
+                discountPercent
+        );
+
+        // =====================================================
+        // CALCULATE TAX
+        // =====================================================
+
+        BigDecimal tax =
+                bill.getAmount()
+                        .multiply(
+                                taxPercent.divide(
+                                        BigDecimal.valueOf(100)
+                                )
+                        );
+
+        // =====================================================
+        // CALCULATE DISCOUNT
+        // =====================================================
+
+        BigDecimal discount =
+                bill.getAmount()
+                        .multiply(
+                                discountPercent.divide(
+                                        BigDecimal.valueOf(100)
+                                )
+                        );
+
+        // =====================================================
+        // TOTAL AMOUNT
+        // =====================================================
+
+        BigDecimal total =
+                bill.getAmount()
+                        .add(tax)
+                        .subtract(discount);
+
         bill.setTotalAmount(total);
 
+        // =====================================================
+        // STATUS
+        // =====================================================
+
         bill.setStatus("Pending");
-        bill.setDueDate(dto.getDueDate() != null ? dto.getDueDate() : LocalDate.now().plusDays(30));
-        bill.setNotes(dto.getNotes() != null ? dto.getNotes() : "");
+
+        // =====================================================
+        // DUE DATE
+        // =====================================================
+
+        bill.setDueDate(
+                dto.getDueDate() != null
+                        ? dto.getDueDate()
+                        : LocalDate.now().plusDays(30)
+        );
+
+        // =====================================================
+        // NOTES
+        // =====================================================
+
+        bill.setNotes(
+                dto.getNotes() != null
+                        ? dto.getNotes()
+                        : ""
+        );
+
+        // =====================================================
+        // SAVE BILL
+        // =====================================================
 
         billRepo.save(bill);
-        return ResponseEntity.ok("Bill generated successfully! Invoice No: " + invoiceNum);
+
+        return ResponseEntity.ok(
+                "Bill generated successfully! Invoice No: "
+                        + invoiceNum
+        );
     }
 
-    // 3. PUT: Mark Bill as Paid
+    // =========================================================
+    // 3. MARK BILL AS PAID
+    // =========================================================
+
     @PutMapping("/{id}/pay")
-    public ResponseEntity<String> markAsPaid(@PathVariable Long id) {
+    public ResponseEntity<String> markAsPaid(
+            @PathVariable Long id) {
+
         Bill bill = billRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Bill not found with ID: " + id));
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Bill not found with ID: "
+                                        + id
+                        )
+                );
+
         bill.setStatus("Paid");
-        bill.setPaidAt(LocalDateTime.now());
+
+        bill.setPaidAt(
+                LocalDateTime.now()
+        );
+
         billRepo.save(bill);
-        return ResponseEntity.ok("Bill marked as Paid.");
+
+        return ResponseEntity.ok(
+                "Bill marked as Paid."
+        );
     }
-    // 4. GET: Dashboard Stats
+
+    // =========================================================
+    // 4. DASHBOARD STATS
+    // =========================================================
+
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Long>> getStats() {
-        long pending = billRepo.countByStatus("Pending");
-        long paid = billRepo.countByStatus("Paid");
-        long overdue = billRepo.countByStatus("Overdue");
 
-        // 🟢 Using Map is safer and completely error-free
-        Map<String, Long> stats = new java.util.HashMap<>();
+        long pending =
+                billRepo.countByStatus("Pending");
+
+        long paid =
+                billRepo.countByStatus("Paid");
+
+        long overdue =
+                billRepo.countByStatus("Overdue");
+
+        Map<String, Long> stats =
+                new HashMap<>();
+
         stats.put("pending", pending);
         stats.put("paid", paid);
         stats.put("overdue", overdue);
@@ -96,27 +261,91 @@ public class BillingController {
         return ResponseEntity.ok(stats);
     }
 
-    // --- Helper Method to convert Entity to DTO ---
-    private List<BillDTO> mapToDTOList(List<Bill> bills) {
-        List<BillDTO> result = new ArrayList<>();
+    // =========================================================
+    // 5. ENTITY -> DTO
+    // =========================================================
+
+    private List<BillDTO> mapToDTOList(
+            List<Bill> bills) {
+
+        List<BillDTO> result =
+                new ArrayList<>();
+
         for (Bill b : bills) {
+
             BillDTO dto = new BillDTO();
-            dto.setId(b.getId());
-            dto.setClientId(b.getClient().getId());
-            dto.setClientName(b.getClient().getName());
-            dto.setInvoiceNumber(b.getInvoiceNumber());
-            dto.setBillingMonth(b.getBillingMonth());
-            dto.setAmount(b.getAmount());
-            dto.setTaxPercent(b.getTaxPercent());
-            dto.setDiscountPercent(b.getDiscountPercent());
-            dto.setTotalAmount(b.getTotalAmount());
-            dto.setStatus(b.getStatus());
-            dto.setDueDate(b.getDueDate());
-            dto.setPaidAt(b.getPaidAt());
-            dto.setNotes(b.getNotes());
-            dto.setCreatedAt(b.getCreatedAt());
+
+            dto.setId(
+                    b.getId()
+            );
+
+            // =================================================
+            // CLIENT
+            // =================================================
+
+            if (b.getClient() != null) {
+
+                dto.setClientId(
+                        b.getClient().getId()
+                );
+
+                // Client मध्ये companyName आहे
+                dto.setClientName(
+                        b.getClient().getClientName()
+                );
+            }
+
+            // =================================================
+            // BILL INFORMATION
+            // =================================================
+
+            dto.setInvoiceNumber(
+                    b.getInvoiceNumber()
+            );
+
+            dto.setBillingMonth(
+                    b.getBillingMonth()
+            );
+
+            dto.setAmount(
+                    b.getAmount()
+            );
+
+            dto.setTaxPercent(
+                    b.getTaxPercent()
+            );
+
+            dto.setDiscountPercent(
+                    b.getDiscountPercent()
+            );
+
+            dto.setTotalAmount(
+                    b.getTotalAmount()
+            );
+
+            dto.setStatus(
+                    b.getStatus()
+            );
+
+            dto.setDueDate(
+                    b.getDueDate()
+            );
+
+            dto.setPaidAt(
+                    b.getPaidAt()
+            );
+
+            dto.setNotes(
+                    b.getNotes()
+            );
+
+            dto.setCreatedAt(
+                    b.getCreatedAt()
+            );
+
             result.add(dto);
         }
+
         return result;
     }
 }

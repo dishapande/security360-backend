@@ -34,7 +34,7 @@ public class User implements UserDetails {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = true)
+    @Column(nullable = false)
     private String password;
 
     @Enumerated(EnumType.STRING)
@@ -44,17 +44,28 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    // =====================================================
+    // CONSTRUCTOR
+    // =====================================================
+
     public User() {
     }
 
+    // =====================================================
+    // CREATED AT
+    // =====================================================
+
     @PrePersist
     public void prePersist() {
-        this.createdAt = LocalDateTime.now();
+
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
     }
 
-    // -------------------------------
-    // Getters and Setters
-    // -------------------------------
+    // =====================================================
+    // GETTERS AND SETTERS
+    // =====================================================
 
     public Long getId() {
         return id;
@@ -101,19 +112,36 @@ public class User implements UserDetails {
         return createdAt;
     }
 
-    // -------------------------------
-    // Spring Security UserDetails
-    // -------------------------------
+    // =====================================================
+    // SPRING SECURITY - AUTHORITIES
+    // =====================================================
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
+
+        if (role == null) {
+            return List.of();
+        }
+
+        return List.of(
+                new SimpleGrantedAuthority(
+                        "ROLE_" + role.name()
+                )
+        );
     }
+
+    // =====================================================
+    // SPRING SECURITY - USERNAME
+    // =====================================================
 
     @Override
     public String getUsername() {
         return email;
     }
+
+    // =====================================================
+    // ACCOUNT STATUS
+    // =====================================================
 
     @Override
     public boolean isAccountNonExpired() {

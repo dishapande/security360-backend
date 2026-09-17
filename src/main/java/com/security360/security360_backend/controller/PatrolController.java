@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -133,5 +135,41 @@ public class PatrolController {
     public ResponseEntity<List<PatrolSession>> getAllPatrolSessions() {
         // Optional: You can add sorting if you want
         return ResponseEntity.ok(sessionRepository.findAllByOrderByStartTimeDesc());
+    }
+
+    // 🟢 9. NEW: Fetch Patrol Report Data (Stats + Detailed Logs)
+    @GetMapping("/report-data")
+    public ResponseEntity<Map<String, Object>> getPatrolReportData() {
+        
+        // Fetch all sessions
+        List<PatrolSession> sessions = sessionRepository.findAll();
+        
+        long totalPatrols = sessions.size();
+        long completed = sessions.stream().filter(s -> "Completed".equalsIgnoreCase(s.getStatus())).count();
+        long missed = sessions.stream().filter(s -> "Missed".equalsIgnoreCase(s.getStatus())).count();
+        long late = sessions.stream().filter(s -> "Late".equalsIgnoreCase(s.getStatus())).count();
+        long inProgress = sessions.stream().filter(s -> "In Progress".equalsIgnoreCase(s.getStatus())).count();
+
+        // Fetch all checkpoints
+        long totalCheckpoints = checkpointRepository.count();
+        
+        // Fetch all scanned logs
+        List<PatrolLog> allLogs = logRepository.findAll();
+        long scannedCheckpoints = allLogs.size();
+        long missedCheckpoints = Math.max(0, totalCheckpoints - scannedCheckpoints);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("totalPatrols", totalPatrols);
+        response.put("completed", completed);
+        response.put("missed", missed);
+        response.put("late", late);
+        response.put("inProgress", inProgress);
+        response.put("totalCheckpoints", totalCheckpoints);
+        response.put("scannedCheckpoints", scannedCheckpoints);
+        response.put("missedCheckpoints", missedCheckpoints);
+        response.put("sessions", sessions); // Fetch detailed sessions for the table
+        response.put("logs", allLogs);      // Fetch detailed logs for the table
+
+        return ResponseEntity.ok(response);
     }
 }

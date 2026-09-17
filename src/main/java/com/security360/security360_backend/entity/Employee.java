@@ -31,6 +31,10 @@ public class Employee {
 
     private LocalDateTime createdAt;
 
+    // ✅ ADD THIS FIELD for salary
+    @Column(name = "basic_salary")
+    private Double basicSalary;
+
     // Constructors
     public Employee() {}
     
@@ -39,7 +43,7 @@ public class Employee {
         this.email = email;
         this.role = role;
         this.createdAt = LocalDateTime.now();
-        this.status = "Active"; // Default status
+        this.status = "Active";
     }
 
     // Getters and Setters
@@ -69,4 +73,21 @@ public class Employee {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    // ✅ ADD THESE GETTERS/SETTERS for salary
+    public Double getBasicSalary() { 
+        return basicSalary; 
+    }
+    
+    public void setBasicSalary(Double basicSalary) { 
+        this.basicSalary = basicSalary; 
+    }
+
+    // ✅ ADD THIS METHOD for daily wage calculation
+    public Double getDailyWage() {
+        if (this.basicSalary != null && this.basicSalary > 0) {
+            return this.basicSalary / 30.0;  // Monthly salary / 30 days
+        }
+        return 0.0;
+    }
 }

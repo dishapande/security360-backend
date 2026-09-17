@@ -18,4 +18,10 @@ public interface AttendanceRepository extends JpaRepository<AttendanceRecord, Lo
     
     // Count how many specific statuses exist today (for Dashboard KPIs)
     long countByStatusAndPunchInTimeBetween(String status, LocalDateTime start, LocalDateTime end);
+
+     List<AttendanceRecord> findByEmployeeIdAndPunchInTimeBetween(
+        Long employeeId, 
+        LocalDateTime start, 
+        LocalDateTime end
+    );
 }

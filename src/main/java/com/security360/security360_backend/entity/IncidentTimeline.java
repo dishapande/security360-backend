@@ -11,7 +11,7 @@ public class IncidentTimeline {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "incident_id", nullable = false)
     private Incident incident;
 

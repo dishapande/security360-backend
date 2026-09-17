@@ -6,5 +6,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ClientRepository extends JpaRepository<Client, Long> {
-    // You can add custom queries here later if needed
+
+    long countByPaymentStatus(String paymentStatus);
+
 }
